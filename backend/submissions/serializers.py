@@ -68,12 +68,11 @@ class SubmissionListSerializer(serializers.ModelSerializer):
         author = getattr(obj, "latest_note_author", None)
         body = getattr(obj, "latest_note_body", None)
         created = getattr(obj, "latest_note_created_at", None)
-        if not (author or body or created):
+        if not body:
             return None
-        preview = (body or "")[:200]
         return {
             "author_name": author,
-            "body_preview": preview,
+            "body_preview": (body or "")[:200],
             "created_at": created,
         }
 

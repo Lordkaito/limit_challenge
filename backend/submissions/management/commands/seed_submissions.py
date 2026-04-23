@@ -37,6 +37,7 @@ class Command(BaseCommand):
             models.TeamMember.objects.all().delete()
 
         fake = Faker()
+        Faker.seed(42)
         now = timezone.now()
 
         brokers = [
