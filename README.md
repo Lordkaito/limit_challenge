@@ -35,7 +35,7 @@ backend/
     views.py               ReadOnly viewsets
     filters/submission.py  All filter logic
     pagination.py          Custom pagination with totalPages
-    tests/                 41 backend tests
+    tests/                 52 backend tests
     management/commands/   seed_submissions, seed_e2e_submissions
 frontend/
   app/
@@ -139,7 +139,7 @@ Every filter is stored as a URL query parameter. This is the most important arch
 
 Implementation: `useSubmissionFilters` reads all params from `useSearchParams()` into a memoized `filters` object and writes changes back with `router.replace()`. The `page` param is reset automatically whenever any other filter changes, preventing stale pagination.
 
-**Company search** is the one exception: the input field holds local draft state so it feels responsive while typing. A 300ms `useDebounce` hook delays the URL write (and therefore the API call) until the user pauses.
+**Company search and general search** are the exceptions: each input field holds local draft state so it feels responsive while typing. A 300ms `useDebounce` hook delays the URL write (and therefore the API call) until the user pauses.
 
 ### Data fetching
 
@@ -175,7 +175,7 @@ Both click/tap handlers append the current query string to the detail URL so the
 
 ## Testing
 
-### Backend — 41 tests
+### Backend — 52 tests
 
 Organized into three files under `submissions/tests/`:
 
@@ -185,15 +185,16 @@ Organized into three files under `submissions/tests/`:
 
 Run: `make test-backend`
 
-### Frontend — 27 unit tests
+### Frontend — 32 unit tests
 
-Five test files using Jest + React Testing Library:
+Six test files using Jest + React Testing Library:
 
 - `params.test.ts` — `buildParams` strips undefined/null/empty, converts types to strings
 - `formatters.test.ts` — STATUS_META and PRIORITY_META completeness, relative date formatting
 - `StatusChip.test.tsx` — all four statuses render the correct label
 - `PriorityChip.test.tsx` — all three priorities render the correct label
 - `EmptyState.test.tsx` — correct message per state, clear button fires callback
+- `useDebounce.test.ts` — initial value returned immediately, delay enforced, timer resets on rapid input, works with non-string types
 
 Run: `make test-frontend`
 
