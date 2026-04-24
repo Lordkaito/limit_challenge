@@ -91,23 +91,21 @@ export function useSubmissionFilters() {
     () =>
       Boolean(
         filters.status ||
-          filters.priority ||
-          filters.brokerId ||
-          filters.search ||
-          filters.companySearch ||
-          filters.createdFrom ||
-          filters.createdTo ||
-          filters.hasDocuments ||
-          filters.hasNotes,
+        filters.priority ||
+        filters.brokerId ||
+        filters.search ||
+        filters.companySearch ||
+        filters.createdFrom ||
+        filters.createdTo ||
+        filters.hasDocuments ||
+        filters.hasNotes,
       ),
     [filters],
   );
 
   const dateRangeInvalid = useMemo(
     () =>
-      Boolean(
-        filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo,
-      ),
+      Boolean(filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo),
     [filters],
   );
 
