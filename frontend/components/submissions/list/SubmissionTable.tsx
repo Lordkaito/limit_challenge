@@ -143,9 +143,7 @@ export function SubmissionTable({
                   </Typography>
                   <Typography variant="caption" color="text.secondary" noWrap>
                     {sub.company.industry}
-                    {sub.company.headquartersCity
-                      ? ` · ${sub.company.headquartersCity}`
-                      : ''}
+                    {sub.company.headquartersCity ? ` · ${sub.company.headquartersCity}` : ''}
                   </Typography>
                 </TableCell>
 
@@ -170,12 +168,7 @@ export function SubmissionTable({
                 </TableCell>
 
                 <TableCell align="center">
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={0.5}
-                  >
+                  <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
                     <DescriptionIcon
                       fontSize="inherit"
                       color={sub.documentCount > 0 ? 'action' : 'disabled'}
@@ -185,12 +178,7 @@ export function SubmissionTable({
                 </TableCell>
 
                 <TableCell align="center">
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={0.5}
-                  >
+                  <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
                     <ChatBubbleOutlineIcon
                       fontSize="inherit"
                       color={sub.noteCount > 0 ? 'action' : 'disabled'}
@@ -203,12 +191,7 @@ export function SubmissionTable({
                   {sub.latestNote ? (
                     <Tooltip title={sub.latestNote.bodyPreview} placement="top">
                       <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          noWrap
-                          display="block"
-                        >
+                        <Typography variant="caption" color="text.secondary" noWrap display="block">
                           {sub.latestNote.authorName}
                         </Typography>
                         <Typography variant="body2" noWrap>

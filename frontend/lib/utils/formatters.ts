@@ -1,10 +1,7 @@
 import type { ChipProps } from '@mui/material/Chip';
 import { SubmissionPriority, SubmissionStatus } from '@/lib/types';
 
-export const STATUS_META: Record<
-  SubmissionStatus,
-  { label: string; color: ChipProps['color'] }
-> = {
+export const STATUS_META: Record<SubmissionStatus, { label: string; color: ChipProps['color'] }> = {
   new: { label: 'New', color: 'primary' },
   in_review: { label: 'In Review', color: 'warning' },
   closed: { label: 'Closed', color: 'success' },

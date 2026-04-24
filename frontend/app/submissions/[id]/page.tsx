@@ -29,12 +29,9 @@ function SubmissionDetailContent() {
   const searchParams = useSearchParams();
   const submissionId = params?.id ?? '';
 
-  const { data, isLoading, isError, error, refetch } =
-    useSubmissionDetail(submissionId);
+  const { data, isLoading, isError, error, refetch } = useSubmissionDetail(submissionId);
 
-  const backHref = `/submissions${
-    searchParams.toString() ? `?${searchParams.toString()}` : ''
-  }`;
+  const backHref = `/submissions${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -83,9 +80,7 @@ function SubmissionDetailContent() {
                 </Typography>
                 <Typography color="text.secondary">
                   {data.company.industry}
-                  {data.company.headquartersCity
-                    ? ` · ${data.company.headquartersCity}`
-                    : ''}
+                  {data.company.headquartersCity ? ` · ${data.company.headquartersCity}` : ''}
                 </Typography>
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
@@ -115,11 +110,7 @@ function SubmissionDetailContent() {
               <Grid size={{ xs: 12, md: 4 }}>
                 <Card variant="outlined" sx={{ height: '100%' }}>
                   <CardContent>
-                    <Typography
-                      variant="overline"
-                      color="text.secondary"
-                      display="block"
-                    >
+                    <Typography variant="overline" color="text.secondary" display="block">
                       Broker
                     </Typography>
                     <Typography variant="subtitle1" fontWeight={600}>
@@ -137,11 +128,7 @@ function SubmissionDetailContent() {
               <Grid size={{ xs: 12, md: 4 }}>
                 <Card variant="outlined" sx={{ height: '100%' }}>
                   <CardContent>
-                    <Typography
-                      variant="overline"
-                      color="text.secondary"
-                      display="block"
-                    >
+                    <Typography variant="overline" color="text.secondary" display="block">
                       Owner
                     </Typography>
                     <Typography variant="subtitle1" fontWeight={600}>
@@ -157,11 +144,7 @@ function SubmissionDetailContent() {
               <Grid size={{ xs: 12, md: 4 }}>
                 <Card variant="outlined" sx={{ height: '100%' }}>
                   <CardContent>
-                    <Typography
-                      variant="overline"
-                      color="text.secondary"
-                      display="block"
-                    >
+                    <Typography variant="overline" color="text.secondary" display="block">
                       Timeline
                     </Typography>
                     <Tooltip title={formatDateTime(data.createdAt)} placement="top">

@@ -1,4 +1,10 @@
-import { STATUS_META, PRIORITY_META, formatRelativeDate, formatDate, formatDateTime } from '../formatters';
+import {
+  STATUS_META,
+  PRIORITY_META,
+  formatRelativeDate,
+  formatDate,
+  formatDateTime,
+} from '../formatters';
 
 describe('STATUS_META', () => {
   it('has entries for all statuses', () => {

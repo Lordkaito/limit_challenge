@@ -34,21 +34,14 @@ export function SubmissionCard({ submission: sub }: Props) {
         aria-label={`View submission for ${sub.company.legalName}`}
       >
         <CardContent>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start"
-            mb={1}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
             <Box flex={1} mr={1}>
               <Typography variant="subtitle2" fontWeight={600}>
                 {sub.company.legalName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {sub.company.industry}
-                {sub.company.headquartersCity
-                  ? ` · ${sub.company.headquartersCity}`
-                  : ''}
+                {sub.company.headquartersCity ? ` · ${sub.company.headquartersCity}` : ''}
               </Typography>
             </Box>
             <Stack direction="row" spacing={0.5} flexShrink={0}>
@@ -77,12 +70,7 @@ export function SubmissionCard({ submission: sub }: Props) {
             </Typography>
           )}
 
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mt={0.5}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mt={0.5}>
             <Stack direction="row" spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
                 {sub.documentCount} doc{sub.documentCount !== 1 ? 's' : ''}

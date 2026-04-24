@@ -57,9 +57,7 @@ function SubmissionsPageContent() {
           <Typography variant="h4" component="h1" fontWeight={700}>
             Submissions
           </Typography>
-          <Typography color="text.secondary">
-            Review broker-submitted opportunities
-          </Typography>
+          <Typography color="text.secondary">Review broker-submitted opportunities</Typography>
         </Box>
 
         <Card variant="outlined" sx={{ p: 2 }}>
@@ -95,9 +93,7 @@ function SubmissionsPageContent() {
                   </Typography>
                 </Box>
               ) : (
-                submissions.map((sub) => (
-                  <SubmissionCard key={sub.id} submission={sub} />
-                ))
+                submissions.map((sub) => <SubmissionCard key={sub.id} submission={sub} />)
               )}
             </Stack>
           ) : (
@@ -123,9 +119,7 @@ function SubmissionsPageContent() {
                   totalCount={totalCount}
                   pageSize={currentPageSize}
                   onPageChange={(p) => updateParams({ page: String(p) })}
-                  onPageSizeChange={(s) =>
-                    updateParams({ pageSize: String(s), page: '1' })
-                  }
+                  onPageSizeChange={(s) => updateParams({ pageSize: String(s), page: '1' })}
                 />
               </Box>
             </>

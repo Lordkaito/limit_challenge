@@ -44,11 +44,7 @@ export function NotesSection({ notes }: Props) {
                     {note.authorName.charAt(0).toUpperCase()}
                   </Avatar>
                   <Box flex={1}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
                       <Typography variant="subtitle2">{note.authorName}</Typography>
                       <Tooltip title={formatDateTime(note.createdAt)} placement="top">
                         <Typography variant="caption" color="text.secondary">
@@ -56,11 +52,7 @@ export function NotesSection({ notes }: Props) {
                         </Typography>
                       </Tooltip>
                     </Stack>
-                    <Typography
-                      variant="body2"
-                      mt={0.5}
-                      sx={{ whiteSpace: 'pre-wrap' }}
-                    >
+                    <Typography variant="body2" mt={0.5} sx={{ whiteSpace: 'pre-wrap' }}>
                       {note.body}
                     </Typography>
                   </Box>

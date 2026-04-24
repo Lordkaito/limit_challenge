@@ -15,10 +15,9 @@ export function useSubmissionsList(filters: SubmissionListFilters) {
   return useQuery({
     queryKey: ['submissions', 'list', filters],
     queryFn: async () => {
-      const res = await apiClient.get<PaginatedResponse<SubmissionListItem>>(
-        '/submissions/',
-        { params: buildParams(filters as Record<string, unknown>) }
-      );
+      const res = await apiClient.get<PaginatedResponse<SubmissionListItem>>('/submissions/', {
+        params: buildParams(filters as Record<string, unknown>),
+      });
       return res.data;
     },
     staleTime: 30_000,

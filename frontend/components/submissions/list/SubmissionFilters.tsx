@@ -70,12 +70,7 @@ export function SubmissionFilters({
 }: Props) {
   return (
     <Box>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        mb={1.5}
-      >
+      <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <FilterListIcon fontSize="small" color="action" />
           <Typography variant="subtitle2" color="text.secondary">
@@ -99,21 +94,14 @@ export function SubmissionFilters({
         )}
       </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        flexWrap="wrap"
-        useFlexGap
-      >
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} flexWrap="wrap" useFlexGap>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel id="status-label">Status</InputLabel>
           <Select
             labelId="status-label"
             label="Status"
             value={status ?? ''}
-            onChange={(e) =>
-              onUpdate({ status: (e.target.value as string) || undefined })
-            }
+            onChange={(e) => onUpdate({ status: (e.target.value as string) || undefined })}
             inputProps={{ 'aria-label': 'Filter by status' }}
           >
             {STATUS_OPTIONS.map((o) => (
@@ -130,9 +118,7 @@ export function SubmissionFilters({
             labelId="priority-label"
             label="Priority"
             value={priority ?? ''}
-            onChange={(e) =>
-              onUpdate({ priority: (e.target.value as string) || undefined })
-            }
+            onChange={(e) => onUpdate({ priority: (e.target.value as string) || undefined })}
             inputProps={{ 'aria-label': 'Filter by priority' }}
           >
             {PRIORITY_OPTIONS.map((o) => (
@@ -149,9 +135,7 @@ export function SubmissionFilters({
             labelId="broker-label"
             label="Broker"
             value={brokerId ?? ''}
-            onChange={(e) =>
-              onUpdate({ brokerId: (e.target.value as string) || undefined })
-            }
+            onChange={(e) => onUpdate({ brokerId: (e.target.value as string) || undefined })}
             inputProps={{ 'aria-label': 'Filter by broker' }}
           >
             <MenuItem value="">All brokers</MenuItem>
@@ -178,9 +162,7 @@ export function SubmissionFilters({
           type="date"
           label="From"
           value={createdFrom ?? ''}
-          onChange={(e) =>
-            onUpdate({ createdFrom: e.target.value || undefined })
-          }
+          onChange={(e) => onUpdate({ createdFrom: e.target.value || undefined })}
           InputLabelProps={{ shrink: true }}
           error={dateRangeInvalid}
           inputProps={{ 'aria-label': 'Filter from date' }}
@@ -205,9 +187,7 @@ export function SubmissionFilters({
             labelId="docs-label"
             label="Documents"
             value={hasDocuments ?? ''}
-            onChange={(e) =>
-              onUpdate({ hasDocuments: (e.target.value as string) || undefined })
-            }
+            onChange={(e) => onUpdate({ hasDocuments: (e.target.value as string) || undefined })}
             inputProps={{ 'aria-label': 'Filter by has documents' }}
           >
             <MenuItem value="">Any</MenuItem>
@@ -222,9 +202,7 @@ export function SubmissionFilters({
             labelId="notes-label"
             label="Notes"
             value={hasNotes ?? ''}
-            onChange={(e) =>
-              onUpdate({ hasNotes: (e.target.value as string) || undefined })
-            }
+            onChange={(e) => onUpdate({ hasNotes: (e.target.value as string) || undefined })}
             inputProps={{ 'aria-label': 'Filter by has notes' }}
           >
             <MenuItem value="">Any</MenuItem>
@@ -234,12 +212,7 @@ export function SubmissionFilters({
         </FormControl>
 
         {hasActiveFilters && (
-          <Button
-            size="small"
-            startIcon={<ClearIcon />}
-            onClick={onClear}
-            color="inherit"
-          >
+          <Button size="small" startIcon={<ClearIcon />} onClick={onClear} color="inherit">
             Clear all
           </Button>
         )}

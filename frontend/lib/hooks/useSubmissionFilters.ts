@@ -10,9 +10,7 @@ export function useSubmissionFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [companyDraft, setCompanyDraft] = useState(
-    searchParams.get('companySearch') ?? ''
-  );
+  const [companyDraft, setCompanyDraft] = useState(searchParams.get('companySearch') ?? '');
   const debouncedCompany = useDebounce(companyDraft, 300);
 
   const filters: SubmissionListFilters = useMemo(
@@ -29,7 +27,7 @@ export function useSubmissionFilters() {
       pageSize: Number(searchParams.get('pageSize') ?? '10'),
       ordering: searchParams.get('ordering') || undefined,
     }),
-    [searchParams]
+    [searchParams],
   );
 
   const updateParams = useCallback(
@@ -45,7 +43,7 @@ export function useSubmissionFilters() {
       if (!('page' in updates)) params.delete('page');
       router.replace(`?${params.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams],
   );
 
   useEffect(() => {
@@ -63,19 +61,17 @@ export function useSubmissionFilters() {
 
   const hasActiveFilters = Boolean(
     filters.status ||
-      filters.priority ||
-      filters.brokerId ||
-      filters.companySearch ||
-      filters.createdFrom ||
-      filters.createdTo ||
-      filters.hasDocuments ||
-      filters.hasNotes
+    filters.priority ||
+    filters.brokerId ||
+    filters.companySearch ||
+    filters.createdFrom ||
+    filters.createdTo ||
+    filters.hasDocuments ||
+    filters.hasNotes,
   );
 
   const dateRangeInvalid = Boolean(
-    filters.createdFrom &&
-      filters.createdTo &&
-      filters.createdFrom > filters.createdTo
+    filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo,
   );
 
   return {
