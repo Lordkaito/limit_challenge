@@ -10,6 +10,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { Suspense } from 'react';
 
+import { useCallback } from 'react';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { useSubmissionFilters } from '@/lib/hooks/useSubmissionFilters';
@@ -31,6 +32,14 @@ function SubmissionsPageContent() {
     hasActiveFilters,
     dateRangeInvalid,
   } = useSubmissionFilters();
+
+  const handleSort = useCallback(
+    (field: string) => {
+      const next = filters.ordering === `-${field}` ? field : `-${field}`;
+      updateParams({ ordering: next });
+    },
+    [filters.ordering, updateParams],
+  );
 
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
@@ -99,6 +108,8 @@ function SubmissionsPageContent() {
               hasActiveFilters={hasActiveFilters}
               onClear={clearAll}
               onRetry={() => submissionsQuery.refetch()}
+              ordering={filters.ordering}
+              onSort={handleSort}
             />
           )}
 

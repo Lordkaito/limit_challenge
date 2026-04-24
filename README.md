@@ -1,3 +1,96 @@
+## Implementation Notes
+
+### Approach
+
+- **URL-driven filter state**: all 8 filters live in URL params via `useSearchParams` + `router.replace`. Links are bookmarkable and shareable. Browser back/forward and history restore filter state correctly.
+- **300ms debounced company search**: local draft state keeps the input responsive while API calls batch after the user stops typing.
+- **Backend query efficiency**: `select_related('broker', 'company', 'owner')` on every action. Action-conditional `prefetch_related` with ordered `Prefetch()` on retrieve. `Exists()` subqueries for boolean filters (no join row multiplication from `distinct()`). Single `Subquery` per annotation for latest note preview.
+- **Single formatter source**: `lib/utils/formatters.ts` owns all status/priority labels and chip colors — imported everywhere, never duplicated across list and detail.
+- **`placeholderData`**: list query retains previous results during filter/pagination changes — no table flash or skeleton re-renders on every page turn.
+- **Stable pagination**: `-id` tiebreak on default ordering prevents duplicate rows when timestamps tie. `totalPages` computed server-side to avoid client-side off-by-one.
+
+### Tradeoffs
+
+- **Eager prefetch on detail** (contacts + documents + notes in one request) vs. lazy section loading. Chosen for simplicity; typical submission sizes don't need streaming. Could add section-level loading for very large note threads.
+- **SQLite for development** — zero infrastructure. Swap `DATABASES` in settings for PostgreSQL in production.
+- **No authentication** — read-only API fits the ops review use case. Would add DRF token auth + Next.js middleware for production.
+
+### Running the project
+
+**Backend**
+
+```bash
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_submissions        # 25 seeded submissions
+python manage.py runserver 0.0.0.0:8000
+```
+
+**Frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Visit `http://localhost:3000/submissions`.
+
+**With Docker Compose**
+
+```bash
+cp .env.example .env   # edit SECRET_KEY
+docker compose up
+```
+
+**Running tests**
+
+```bash
+# Backend (41 tests)
+cd backend && python manage.py test submissions.tests -v 2
+
+# Frontend unit tests (27 tests)
+cd frontend && npm test
+
+# E2E tests (requires running app + E2E seed)
+cd backend && python manage.py seed_e2e_submissions --force
+cd frontend && npm run test:e2e
+```
+
+### Extras implemented
+
+- [x] All optional filters: `createdFrom`, `createdTo`, `hasDocuments`, `hasNotes`
+- [x] Priority filter + full-text `search` filter (spans company name, broker name, summary)
+- [x] Date range validation — client-side warning alert + server-side 400 rejection
+- [x] Responsive layout: table on desktop (md+), card grid on mobile
+- [x] MUI Skeleton loaders everywhere — no "Loading..." text
+- [x] Distinct empty states: "No submissions yet" vs "No matches for active filters"
+- [x] Relative dates ("Today", "Yesterday", "3d ago") with full datetime tooltip on hover
+- [x] Keyboard navigation on table rows (Enter/Space)
+- [x] `aria-label` on all 8 filter inputs
+- [x] `rel="noopener noreferrer"` on external document links
+- [x] Active filter indicator + "Clear all filters" button
+- [x] Back link on detail page restores full filter query string from URL
+- [x] `-id` tiebreak on default ordering for stable pagination
+- [x] `totalPages` returned by server (no client-side computation)
+- [x] `pagination_class = None` explicit on `BrokerViewSet` (flat array for dropdown)
+- [x] Env-var driven settings — no hardcoded `SECRET_KEY` or `CORS_ALLOW_ALL_ORIGINS`
+- [x] `Exists()` subqueries for boolean filters (not `join + distinct()`)
+- [x] Deterministic `Faker.seed(42)` in main seed command
+- [x] Deterministic `seed_e2e_submissions` command for Playwright tests
+- [x] 41 backend tests + 27 frontend unit tests
+- [x] Playwright E2E test suite (filter flow, detail navigation, back button, empty states)
+- [x] Column sort UI (Status, Priority, Created) via `?ordering=` param
+- [x] Configurable page size (10 / 20 / 50 rows)
+- [x] Docker Compose + GitHub Actions CI
+- [x] Makefile with `setup`, `dev-backend`, `dev-frontend`, `test-backend`, `test-frontend`, `seed`, `seed-e2e`
+- [x] `ReactQueryDevtools` (initialIsOpen=false) for reviewer inspection
+- [x] Toast context + Snackbar for global error notifications
+
+---
+
 # Submission Tracker Take-home Challenge
 
 This repository hosts the boilerplate for the Submission Tracker assignment. It includes a Django +
