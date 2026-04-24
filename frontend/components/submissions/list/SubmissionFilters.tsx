@@ -179,7 +179,7 @@ export function SubmissionFilters({
           onChange={(e) => onUpdate({ createdFrom: e.target.value || undefined })}
           InputLabelProps={{ shrink: true }}
           error={dateRangeInvalid}
-          inputProps={{ 'aria-label': 'Filter from date' }}
+          inputProps={{ 'aria-label': 'Filter from date', max: createdTo }}
           sx={{ minWidth: 150 }}
         />
 
@@ -191,7 +191,8 @@ export function SubmissionFilters({
           onChange={(e) => onUpdate({ createdTo: e.target.value || undefined })}
           InputLabelProps={{ shrink: true }}
           error={dateRangeInvalid}
-          inputProps={{ 'aria-label': 'Filter to date' }}
+          disabled={dateRangeInvalid}
+          inputProps={{ 'aria-label': 'Filter to date', min: createdFrom }}
           sx={{ minWidth: 150 }}
         />
 
