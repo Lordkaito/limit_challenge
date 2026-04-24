@@ -8,9 +8,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
-import { Suspense } from 'react';
-
-import { useCallback } from 'react';
+import { Suspense, useCallback, useEffect } from 'react';
+import { useToast } from '@/app/providers';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
 import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
 import { useSubmissionFilters } from '@/lib/hooks/useSubmissionFilters';
@@ -43,8 +42,22 @@ function SubmissionsPageContent() {
     [filters.ordering, updateParams],
   );
 
+  const { showError } = useToast();
+
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
+
+  useEffect(() => {
+    if (submissionsQuery.isError) {
+      showError('Failed to load submissions. Please try again.');
+    }
+  }, [submissionsQuery.isError, showError]);
+
+  useEffect(() => {
+    if (brokerQuery.isError) {
+      showError('Failed to load broker list. Please try again.');
+    }
+  }, [brokerQuery.isError, showError]);
 
   const submissions = submissionsQuery.data?.results ?? [];
   const totalCount = submissionsQuery.data?.count ?? 0;
