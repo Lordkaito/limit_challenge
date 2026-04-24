@@ -36,3 +36,16 @@ export function useSubmissionDetail(id: string | number) {
     enabled: Boolean(id),
   });
 }
+
+export function useSubmissionStats() {
+  return useQuery({
+    queryKey: ['submissions', 'stats', 'high-priority-new'],
+    queryFn: async () => {
+      const res = await apiClient.get<PaginatedResponse<SubmissionListItem>>('/submissions/', {
+        params: { priority: 'high', status: 'new', pageSize: 1 },
+      });
+      return res.data.count;
+    },
+    staleTime: 60_000,
+  });
+}

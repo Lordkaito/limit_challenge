@@ -2,6 +2,7 @@
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
@@ -11,7 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import { Suspense, useCallback, useEffect } from 'react';
 import { useToast } from '@/app/providers';
 import { useBrokerOptions } from '@/lib/hooks/useBrokerOptions';
-import { useSubmissionsList } from '@/lib/hooks/useSubmissions';
+import { useSubmissionsList, useSubmissionStats } from '@/lib/hooks/useSubmissions';
 import { useSubmissionFilters } from '@/lib/hooks/useSubmissionFilters';
 import { SubmissionFilters } from '@/components/submissions/list/SubmissionFilters';
 import { SubmissionTable } from '@/components/submissions/list/SubmissionTable';
@@ -46,6 +47,8 @@ function SubmissionsPageContent() {
 
   const submissionsQuery = useSubmissionsList(filters);
   const brokerQuery = useBrokerOptions();
+  const statsQuery = useSubmissionStats();
+  const urgentCount = statsQuery.data ?? 0;
 
   useEffect(() => {
     if (submissionsQuery.isError) {
@@ -69,10 +72,35 @@ function SubmissionsPageContent() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack spacing={3}>
         <Box>
-          <Typography variant="h4" component="h1" fontWeight={700}>
-            Submissions
-          </Typography>
-          <Typography color="text.secondary">Review broker-submitted opportunities</Typography>
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            flexWrap="wrap"
+            gap={1}
+          >
+            <Box>
+              <Typography variant="h4" component="h1" fontWeight={700}>
+                Submissions
+              </Typography>
+              <Typography color="text.secondary">Review broker-submitted opportunities</Typography>
+            </Box>
+            {(totalCount > 0 || urgentCount > 0) && (
+              <Stack direction="row" spacing={1} alignItems="center" pt={0.5}>
+                {totalCount > 0 && (
+                  <Chip label={`${totalCount} total`} size="small" variant="outlined" />
+                )}
+                {urgentCount > 0 && (
+                  <Chip
+                    label={`${urgentCount} urgent`}
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                  />
+                )}
+              </Stack>
+            )}
+          </Stack>
         </Box>
 
         <Card variant="outlined" sx={{ p: 2 }}>
