@@ -1,228 +1,250 @@
-## Implementation Notes
+# Submission Tracker
 
-### Approach
+A workspace for operations managers to review broker-submitted opportunities. Browse incoming submissions, filter by business context, and inspect full details per record.
 
-- **URL-driven filter state**: all 8 filters live in URL params via `useSearchParams` + `router.replace`. Links are bookmarkable and shareable. Browser back/forward and history restore filter state correctly.
-- **300ms debounced company search**: local draft state keeps the input responsive while API calls batch after the user stops typing.
-- **Backend query efficiency**: `select_related('broker', 'company', 'owner')` on every action. Action-conditional `prefetch_related` with ordered `Prefetch()` on retrieve. `Exists()` subqueries for boolean filters (no join row multiplication from `distinct()`). Single `Subquery` per annotation for latest note preview.
-- **Single formatter source**: `lib/utils/formatters.ts` owns all status/priority labels and chip colors — imported everywhere, never duplicated across list and detail.
-- **`placeholderData`**: list query retains previous results during filter/pagination changes — no table flash or skeleton re-renders on every page turn.
-- **Stable pagination**: `-id` tiebreak on default ordering prevents duplicate rows when timestamps tie. `totalPages` computed server-side to avoid client-side off-by-one.
+**Stack:** Django 5 + Django REST Framework · Next.js 16 + React 19 · Material UI v7 · TanStack Query v5
 
-### Tradeoffs
+---
 
-- **Eager prefetch on detail** (contacts + documents + notes in one request) vs. lazy section loading. Chosen for simplicity; typical submission sizes don't need streaming. Could add section-level loading for very large note threads.
-- **SQLite for development** — zero infrastructure. Swap `DATABASES` in settings for PostgreSQL in production.
-- **No authentication** — read-only API fits the ops review use case. Would add DRF token auth + Next.js middleware for production.
+## Quick start
 
-### Running the project
-
-**Backend**
+See [`SETUP.md`](./SETUP.md) for full instructions. Short version:
 
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py seed_submissions        # 25 seeded submissions
-python manage.py runserver 0.0.0.0:8000
-```
+# Backend
+cd backend && python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && python manage.py migrate
+python manage.py seed_submissions && python manage.py runserver 0.0.0.0:8000
 
-**Frontend**
-
-```bash
-cd frontend
-npm install
-npm run dev
+# Frontend (separate terminal)
+cd frontend && npm install && npm run dev
 ```
 
 Visit `http://localhost:3000/submissions`.
 
-**With Docker Compose**
+---
 
-```bash
-cp .env.example .env   # edit SECRET_KEY
-docker compose up
+## Project structure
+
 ```
-
-**Running tests**
-
-```bash
-# Backend (41 tests)
-cd backend && python manage.py test submissions.tests -v 2
-
-# Frontend unit tests (27 tests)
-cd frontend && npm test
-
-# E2E tests (requires running app + E2E seed)
-cd backend && python manage.py seed_e2e_submissions --force
-cd frontend && npm run test:e2e
+backend/
+  server/                  Django project (settings, urls)
+  submissions/
+    models.py              Domain models
+    serializers.py         List and detail serializers
+    views.py               ReadOnly viewsets
+    filters/submission.py  All filter logic
+    pagination.py          Custom pagination with totalPages
+    tests/                 41 backend tests
+    management/commands/   seed_submissions, seed_e2e_submissions
+frontend/
+  app/
+    submissions/page.tsx          List page
+    submissions/[id]/page.tsx     Detail page
+    providers.tsx                 MUI theme, React Query, Toast context
+  components/
+    common/                StatusChip, PriorityChip
+    submissions/list/      SubmissionTable, SubmissionCard, SubmissionFilters,
+                           SubmissionPagination, LoadingState, EmptyState, ErrorState
+    submissions/detail/    ContactsSection, DocumentsSection, NotesSection, DetailSkeleton
+  lib/
+    hooks/                 useSubmissions, useBrokerOptions, useSubmissionFilters, useDebounce
+    utils/                 formatters.ts, params.ts
+    types.ts
+  e2e/                     Playwright tests
 ```
-
-### Extras implemented
-
-- [x] All optional filters: `createdFrom`, `createdTo`, `hasDocuments`, `hasNotes`
-- [x] Priority filter + full-text `search` filter (spans company name, broker name, summary)
-- [x] Date range validation — client-side warning alert + server-side 400 rejection
-- [x] Responsive layout: table on desktop (md+), card grid on mobile
-- [x] MUI Skeleton loaders everywhere — no "Loading..." text
-- [x] Distinct empty states: "No submissions yet" vs "No matches for active filters"
-- [x] Relative dates ("Today", "Yesterday", "3d ago") with full datetime tooltip on hover
-- [x] Keyboard navigation on table rows (Enter/Space)
-- [x] `aria-label` on all 8 filter inputs
-- [x] `rel="noopener noreferrer"` on external document links
-- [x] Active filter indicator + "Clear all filters" button
-- [x] Back link on detail page restores full filter query string from URL
-- [x] `-id` tiebreak on default ordering for stable pagination
-- [x] `totalPages` returned by server (no client-side computation)
-- [x] `pagination_class = None` explicit on `BrokerViewSet` (flat array for dropdown)
-- [x] Env-var driven settings — no hardcoded `SECRET_KEY` or `CORS_ALLOW_ALL_ORIGINS`
-- [x] `Exists()` subqueries for boolean filters (not `join + distinct()`)
-- [x] Deterministic `Faker.seed(42)` in main seed command
-- [x] Deterministic `seed_e2e_submissions` command for Playwright tests
-- [x] 41 backend tests + 27 frontend unit tests
-- [x] Playwright E2E test suite (filter flow, detail navigation, back button, empty states)
-- [x] Column sort UI (Status, Priority, Created) via `?ordering=` param
-- [x] Configurable page size (10 / 20 / 50 rows)
-- [x] Docker Compose + GitHub Actions CI
-- [x] Makefile with `setup`, `dev-backend`, `dev-frontend`, `test-backend`, `test-frontend`, `seed`, `seed-e2e`
-- [x] `ReactQueryDevtools` (initialIsOpen=false) for reviewer inspection
-- [x] Toast context + Snackbar for global error notifications
 
 ---
 
-# Submission Tracker Take-home Challenge
+## Backend
 
-This repository hosts the boilerplate for the Submission Tracker assignment. It includes a Django +
-Django REST Framework backend and a Next.js frontend scaffold so candidates can focus on API
-design, relational data modelling, and product-focused UI work.
+### API endpoints
 
-## Challenge Overview
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/submissions/` | Paginated list with filters |
+| GET | `/api/submissions/<id>/` | Full detail with contacts, documents, notes |
+| GET | `/api/brokers/` | Flat array for dropdown (unpaginated) |
 
-Operations managers need a workspace to review broker-submitted opportunities. Build a lightweight
-tool that lets them browse incoming submissions, filter by business context, and inspect full
-details per record. Deliver a polished frontend experience backed by clean APIs.
+### Filtering
 
-### Goals
+All filters are composed with AND logic via `django-filter`. The list endpoint supports:
 
-- **Backend:** Model the domain, expose list and detail endpoints, and support realistic filtering.
-- **Frontend (higher weight):** Craft an intuitive list and detail experience with filters that map
-  to query parameters. Focus on UX clarity, organization, and maintainability.
+| Param | Type | Behavior |
+|-------|------|----------|
+| `status` | string | Case-insensitive exact match |
+| `priority` | string | Case-insensitive exact match |
+| `brokerId` | integer | FK lookup |
+| `companySearch` | string | `icontains` across legal name, industry, and city |
+| `search` | string | Full-text across company name, broker name, and summary |
+| `createdFrom` | date | Inclusive lower bound on `created_at` |
+| `createdTo` | date | Inclusive upper bound on `created_at` |
+| `hasDocuments` | boolean | Presence filter |
+| `hasNotes` | boolean | Presence filter |
+| `ordering` | string | Sort by `created_at`, `status`, or `priority` (prefix `-` for descending) |
+| `page` / `pageSize` | integer | Pagination (default 10, max 100) |
 
-## Data Model
+**Boolean filters use `Exists()` subqueries** instead of `JOIN + distinct()`. A join-based approach multiplies rows when a submission has many documents, requiring `distinct()` to deduplicate — which is slower and semantically fragile. `Exists()` short-circuits as soon as one related row is found and never inflates the queryset.
 
-Required entities (already defined in `submissions/models.py`):
+**Date range validation** is enforced both on the server (returns 400 if `createdFrom > createdTo`) and visually in the UI (warning alert, no silent bad request).
 
-- `Broker`: name, contact email
-- `Company`: legal name, industry, headquarters city
-- `TeamMember`: internal owner for a submission
-- `Submission`: links to company, broker, owner with status, priority, and summary
-- `Contact`: primary contacts for a submission
-- `Document`: references to supporting files
-- `Note`: threaded context for collaboration
+### Query optimization
 
-Seed data (~25 submissions with dozens of related contacts, documents, and notes) is available via
-`python manage.py seed_submissions`. Re-run with `--force` to rebuild the dataset.
+The viewset uses action-conditional querysets to avoid over-fetching:
 
-## API Requirements
+**List action** — needs counts and a note preview, not full related objects:
+- `select_related('broker', 'company', 'owner')` — eliminates N+1 on FK fields
+- `Count('documents', distinct=True)` and `Count('notes', distinct=True)` — annotated counts
+- Three `Subquery` annotations pulling `author_name`, `body`, and `created_at` from the latest note — avoids fetching all notes just for a preview
 
-- `GET /api/submissions/`
-  - Returns paginated submissions with company, broker, owner, counts of related documents/notes,
-    and the latest note preview.
-  - Supports filters via query params. `status` is wired up; extend filters for `brokerId` and
-    `companySearch` (plus optional extras like `createdFrom`, `createdTo`, `hasDocuments`, `hasNotes`).
-- `GET /api/submissions/<id>/`
-  - Returns the full submission plus related contacts, documents, and notes.
-- `GET /api/brokers/`
-  - Returns brokers for the frontend dropdown.
+**Retrieve action** — needs full related data:
+- Same `select_related` base
+- `Prefetch('contacts', queryset=Contact.objects.order_by('name'))` 
+- `Prefetch('documents', queryset=Document.objects.order_by('-uploaded_at'))`
+- `Prefetch('notes', queryset=Note.objects.order_by('-created_at'))`
 
-Viewsets, serializers, and base filters are in place but intentionally minimal so you can refine
-the query behavior and filtering logic.
+Ordering is explicit on every `Prefetch` — without it, related objects arrive in an undefined order that varies by database.
 
-## Frontend Workspace Overview
+**`BrokerViewSet`** sets `pagination_class = None` explicitly, returning a flat array the frontend dropdown can consume directly. Without this, it would inherit the global pagination class and return a `{count, results}` envelope instead.
 
-The Next.js 16 + React 19 app in `frontend/` is pre-wired for this challenge. Material UI handles
-layout, axios powers HTTP requests, and `@tanstack/react-query` is ready for data fetching. The list
-and detail routes under `/submissions` are scaffolded so you can focus on API consumption and UX
-polish.
+### Pagination
 
-### What is pre-built?
+A custom `SubmissionPagination` class extends DRF's `PageNumberPagination` to include `totalPages` in the response. Computing this client-side is error-prone (off-by-one on the ceiling division, edge cases at zero). Returning it from the server means the frontend just reads a number.
 
-- Global providers supply Material UI theming and a shared React Query client.
-- `/submissions` hosts the list view with filter inputs and hints about required query params.
-- `/submissions/[id]` hosts the detail shell and links back to the list.
-- Custom hooks in `lib/hooks` define how to fetch submissions and brokers. Each hook is disabled by
-  default (`enabled: false`) so no network requests fire until you enable them.
+### Serializers
 
-### What you need to implement
+Two serializers share no logic:
 
-- Wire the filter state to query parameters and React Query `queryFn`s.
-- Render table/card layouts for the submission list along with loading, empty, and error states.
-- Build the detail page sections for summary data, contacts, documents, and notes.
-- Enable the queries and handle pagination or other UX you want to highlight.
+- `SubmissionListSerializer` — flat fields + annotated counts + `get_latest_note` method field. The method field reads annotation attributes set by the viewset (`latest_note_author`, `latest_note_body`, `latest_note_created_at`) and returns `null` when no notes exist.
+- `SubmissionDetailSerializer` — same FK fields + nested `contacts`, `documents`, and `notes` arrays.
 
-## Project Structure
+`djangorestframework-camel-case` handles snake_case → camelCase conversion at the renderer layer, so serializer fields stay Pythonic and the frontend receives idiomatic JavaScript keys.
 
-- `backend/`: Django project with REST API, seed command, and submission models.
-- `frontend/`: Next.js app described above.
-- `INTERVIEWER_NOTES.md`: Context for reviewers/interviewers.
+### Settings
 
-## Environment Variables
+All secrets and environment-specific values come from environment variables — no hardcoded `SECRET_KEY`, no `CORS_ALLOW_ALL_ORIGINS = True`. Defaults are safe for local development. See `.env.example` for the full list.
 
-- Frontend requests default to `http://localhost:8000/api`. Override this by creating
-  `frontend/.env.local` and setting `NEXT_PUBLIC_API_BASE_URL`.
+---
 
-## Getting Started
+## Frontend
 
-### Backend
+### Filter state lives in the URL
 
+Every filter is stored as a URL query parameter. This is the most important architectural decision in the frontend — it means:
+
+- Links are bookmarkable and shareable
+- Browser back/forward restores the exact filter state
+- Refreshing the page doesn't lose the current view
+- Navigating to a detail page and returning lands back on the same filtered list
+
+Implementation: `useSubmissionFilters` reads all params from `useSearchParams()` into a memoized `filters` object and writes changes back with `router.replace()`. The `page` param is reset automatically whenever any other filter changes, preventing stale pagination.
+
+**Company search** is the one exception: the input field holds local draft state so it feels responsive while typing. A 300ms `useDebounce` hook delays the URL write (and therefore the API call) until the user pauses.
+
+### Data fetching
+
+TanStack Query manages all server state:
+
+- `useSubmissionsList(filters)` — query key includes the full filters object, so every unique combination of params gets its own cache entry. `staleTime: 30s` avoids redundant refetches when switching between pages. `placeholderData: (prev) => prev` keeps the previous page's data visible while the next page loads, eliminating the skeleton flash that would otherwise appear on every pagination click.
+- `useSubmissionDetail(id)` — `staleTime: 60s`, only enabled when an `id` is present.
+- `useBrokerOptions()` — `staleTime: 5min`, brokers change rarely.
+
+`buildParams` strips `undefined`, `null`, and empty strings before building the axios request, preventing spurious `?status=&brokerId=` params from reaching the API.
+
+### Component structure
+
+**List page** renders differently at the `md` breakpoint:
+- Desktop: `SubmissionTable` — a full MUI `Table` with 9 columns. Rows are keyboard navigable (Enter/Space trigger navigation). Sortable columns (Status, Priority, Created) use `TableSortLabel` and write `?ordering=` to the URL.
+- Mobile: a stack of `SubmissionCard` components — compact cards with the same data in a touch-friendly layout.
+
+Both click/tap handlers append the current query string to the detail URL so the back button restores filters.
+
+**Detail page** is composed of independent section components (`ContactsSection`, `DocumentsSection`, `NotesSection`), each responsible for its own empty state. The back button reconstructs the list URL from the detail page's own `useSearchParams()`, preserving filters even if the user refreshes on the detail page.
+
+**Loading states** use MUI `Skeleton` components shaped to match the real content — table rows with the right column widths, card-shaped blocks for the detail sections. There is no "Loading..." text anywhere.
+
+**Empty states** distinguish two cases: no data at all ("No submissions yet") vs. filters that returned nothing ("No matches — clear filters"). These are meaningfully different messages for the user.
+
+**Error states** always include a Retry button that calls `refetch()`. Route-level error boundaries (`error.tsx`) catch rendering errors with the same pattern.
+
+### Single source of truth for status and priority
+
+`lib/utils/formatters.ts` owns `STATUS_META` and `PRIORITY_META` — maps from status/priority values to display labels and MUI chip colors. `StatusChip` and `PriorityChip` import from there. Nothing else defines these mappings. This prevents the common mistake of duplicating color logic across the list and detail pages that then drift out of sync.
+
+---
+
+## Testing
+
+### Backend — 41 tests
+
+Organized into three files under `submissions/tests/`:
+
+- `test_views.py` — list shape (all fields, camelCase), annotation correctness (document count, note count, latest note), detail ordering (contacts alphabetical, documents/notes newest-first), 404 on missing ID, broker flat array
+- `test_filters.py` — all 9 filters individually, filter combinations, date range 400, page size param
+- `test_serializers.py` — serializer field defaults and null handling
+
+Run: `make test-backend`
+
+### Frontend — 27 unit tests
+
+Five test files using Jest + React Testing Library:
+
+- `params.test.ts` — `buildParams` strips undefined/null/empty, converts types to strings
+- `formatters.test.ts` — STATUS_META and PRIORITY_META completeness, relative date formatting
+- `StatusChip.test.tsx` — all four statuses render the correct label
+- `PriorityChip.test.tsx` — all three priorities render the correct label
+- `EmptyState.test.tsx` — correct message per state, clear button fires callback
+
+Run: `make test-frontend`
+
+### E2E — 9 Playwright tests
+
+Uses a deterministic seed (`seed_e2e_submissions`) with 3 fixed submissions so assertions are stable:
+
+- List page loads and shows all 3 companies
+- Status filter updates URL and hides non-matching rows
+- Priority filter updates URL
+- Company search debounces and syncs to URL
+- Clear all resets URL and restores full list
+- Row click navigates to detail
+- Detail page shows all sections for a data-rich submission
+- Back button preserves filter params in URL
+- Empty states shown for a submission with no contacts/documents/notes
+
+Run (requires both servers running with E2E data):
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py seed_submissions  # optional but recommended
-# add --force to rebuild the generated sample data
-python manage.py runserver 0.0.0.0:8000
+make seed-e2e
+cd frontend && npm run test:e2e
 ```
 
-### Frontend
+---
 
-```bash
-cd frontend
-npm install
-cp .env.example .env.local  # create if you want a custom API base
-# NEXT_PUBLIC_API_BASE_URL defaults to http://localhost:8000/api
-npm run dev
-```
+## Extras
 
-Visit `http://localhost:3000/submissions` to start building.
+### Docker Compose + GitHub Actions CI
 
-## Development Workflow
+`docker-compose.yml` orchestrates both services. `.github/workflows/ci.yml` runs backend tests and frontend typecheck + lint + unit tests on every push and pull request.
 
-1. Start the Django server on port 8000 (`python manage.py runserver`).
-2. Start the Next.js dev server on port 3000 (`npm run dev`).
-3. Iterate on backend filters, serializers, and viewsets, then refresh the frontend to see updated
-   data.
-4. When ready, add README notes summarizing your approach, tradeoffs, and any stretch goals.
+### Makefile
 
-## Submission Instructions
+Shortcuts for every common task. See `SETUP.md` for the full table.
 
-- Provide a short README update summarizing approach, tradeoffs, and how to run the solution.
-- Record and share a brief screen capture (max 2 minutes) demonstrating the frontend working end-to-end with the backend.
-- Call out any stretch goals implemented.
-- Automated tests are optional, but including targeted backend or frontend tests is a strong signal.
+### Deterministic seed
 
-## Evaluation Rubric
+The main seed uses `Faker.seed(42)` so the generated dataset is reproducible across machines. A separate `seed_e2e_submissions` command creates a minimal, fully hardcoded 3-submission dataset for Playwright tests — no Faker, no randomness, every field is a known constant.
 
-- **Frontend (45%)** – UX clarity, filter UX tied to query params, state/data management, handling
-  of loading/empty/error cases, and overall polish.
-- **Backend (30%)** – API design, serialization choices, filtering implementation, and attention to
-  relational data handling.
-- **Code Quality (15%)** – Structure, naming, documentation/readability, testing where it adds
-  value.
-- **Product Thinking (10%)** – Workflow clarity, assumptions noted, and thoughtful UX details.
+### ReactQueryDevtools
 
-## Optional Bonus
+Included with `initialIsOpen=false`. Open via the floating button in the bottom corner to inspect cache entries, query states, and refetch behavior while reviewing.
 
-Authentication, deployment, or extra tooling are not required but welcome if scope allows.
+### Toast notifications
+
+A `ToastContext` in `providers.tsx` exposes a `useToast()` hook that any component can call to surface an error Snackbar. Anchored bottom-right, auto-hides after 5 seconds.
+
+### Column sorting
+
+Clicking the Status, Priority, or Created column headers sets `?ordering=` in the URL. A second click on the same column toggles direction. The backend `OrderingFilter` handles the rest.
+
+### Configurable page size
+
+The pagination footer includes a rows-per-page selector (10 / 20 / 50). Changing it resets to page 1 and updates `?pageSize=` in the URL.
