@@ -65,9 +65,9 @@ export function SubmissionTable({
             <TableCell>Company</TableCell>
             <TableCell>
               <TableSortLabel
-                active={ordering === 'status' || ordering === '-status'}
-                direction={ordering === 'status' ? 'asc' : 'desc'}
-                onClick={() => onSort?.('status')}
+                active={ordering === 'status_order' || ordering === '-status_order'}
+                direction={ordering === 'status_order' ? 'asc' : 'desc'}
+                onClick={() => onSort?.('status_order')}
               >
                 Status
               </TableSortLabel>

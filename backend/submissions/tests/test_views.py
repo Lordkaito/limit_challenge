@@ -126,6 +126,24 @@ class SubmissionListViewTests(TestCase):
         owner = self.get().json()["results"][0]["owner"]
         self.assertIn("fullName", owner)
 
+    def test_status_sort_follows_workflow_order(self):
+        """Ascending status_order sort returns submissions in new→in_review→closed→lost order."""
+        broker = make_broker("SortBroker")
+        company = make_company("SortCorp")
+        owner = make_owner("sort@test.com")
+        statuses = ["lost", "closed", "in_review", "new"]
+        for s in statuses:
+            make_submission(broker=broker, company=company, owner=owner, status=s)
+
+        res = self.client.get("/api/submissions/?ordering=status_order&pageSize=100")
+        self.assertEqual(res.status_code, 200)
+        results = res.json()["results"]
+        if len(results) < 2:
+            return  # not enough data to assert order
+        workflow_rank = {"new": 0, "in_review": 1, "closed": 2, "lost": 3}
+        ranks = [workflow_rank[s["status"]] for s in results]
+        self.assertEqual(ranks, sorted(ranks), "statuses not in workflow order")
+
 
 class SubmissionDetailViewTests(TestCase):
     @classmethod

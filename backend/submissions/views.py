@@ -1,10 +1,19 @@
-from django.db.models import Count, OuterRef, Prefetch, Subquery
+from django.db.models import Case, Count, IntegerField, OuterRef, Prefetch, Subquery, When
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 
 from submissions import models, serializers
 from submissions.filters.submission import SubmissionFilterSet
 from submissions.pagination import SubmissionPagination
+
+STATUS_WORKFLOW_ORDER = Case(
+    When(status=models.Submission.Status.NEW, then=0),
+    When(status=models.Submission.Status.IN_REVIEW, then=1),
+    When(status=models.Submission.Status.CLOSED, then=2),
+    When(status=models.Submission.Status.LOST, then=3),
+    default=99,
+    output_field=IntegerField(),
+)
 
 
 class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -14,13 +23,13 @@ class SubmissionViewSet(viewsets.ReadOnlyModelViewSet):
         *viewsets.ReadOnlyModelViewSet.filter_backends,
         OrderingFilter,
     ]
-    ordering_fields = ["created_at", "status", "priority"]
+    ordering_fields = ["created_at", "status_order", "priority"]
     ordering = ["-created_at", "-id"]
 
     def get_queryset(self):
         base_qs = models.Submission.objects.select_related(
             "broker", "company", "owner"
-        )
+        ).annotate(status_order=STATUS_WORKFLOW_ORDER)
 
         if self.action == "list":
             latest_note_qs = models.Note.objects.filter(
