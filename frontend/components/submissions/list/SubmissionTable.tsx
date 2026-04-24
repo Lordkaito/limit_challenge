@@ -6,10 +6,11 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import DescriptionIcon from '@mui/icons-material/Description';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { SubmissionListItem } from '@/lib/types';
@@ -27,6 +28,8 @@ interface Props {
   hasActiveFilters: boolean;
   onClear: () => void;
   onRetry: () => void;
+  ordering?: string;
+  onSort?: (field: string) => void;
 }
 
 export function SubmissionTable({
@@ -36,6 +39,8 @@ export function SubmissionTable({
   hasActiveFilters,
   onClear,
   onRetry,
+  ordering,
+  onSort,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,8 +63,24 @@ export function SubmissionTable({
         <TableHead>
           <TableRow sx={{ '& th': { fontWeight: 600, whiteSpace: 'nowrap' } }}>
             <TableCell>Company</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Priority</TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={ordering === 'status' || ordering === '-status'}
+                direction={ordering === 'status' ? 'asc' : 'desc'}
+                onClick={() => onSort?.('status')}
+              >
+                Status
+              </TableSortLabel>
+            </TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={ordering === 'priority' || ordering === '-priority'}
+                direction={ordering === 'priority' ? 'asc' : 'desc'}
+                onClick={() => onSort?.('priority')}
+              >
+                Priority
+              </TableSortLabel>
+            </TableCell>
             <TableCell>Broker</TableCell>
             <TableCell>Owner</TableCell>
             <TableCell align="center">
@@ -73,7 +94,15 @@ export function SubmissionTable({
               </Tooltip>
             </TableCell>
             <TableCell>Latest Note</TableCell>
-            <TableCell>Created</TableCell>
+            <TableCell>
+              <TableSortLabel
+                active={ordering === 'created_at' || ordering === '-created_at'}
+                direction={ordering === 'created_at' ? 'asc' : 'desc'}
+                onClick={() => onSort?.('created_at')}
+              >
+                Created
+              </TableSortLabel>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
