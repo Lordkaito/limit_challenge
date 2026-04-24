@@ -30,6 +30,7 @@ interface Props {
   onRetry: () => void;
   ordering?: string;
   onSort?: (field: string) => void;
+  pageSize?: number;
 }
 
 export function SubmissionTable({
@@ -41,6 +42,7 @@ export function SubmissionTable({
   onRetry,
   ordering,
   onSort,
+  pageSize = 10,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -106,7 +108,7 @@ export function SubmissionTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {isLoading && <LoadingState rows={6} />}
+          {isLoading && <LoadingState rows={pageSize} />}
 
           {isError && (
             <TableRow>

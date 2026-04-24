@@ -123,6 +123,7 @@ function SubmissionsPageContent() {
               onRetry={() => submissionsQuery.refetch()}
               ordering={filters.ordering}
               onSort={handleSort}
+              pageSize={currentPageSize}
             />
           )}
 
