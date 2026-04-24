@@ -18,13 +18,10 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 export function SubmissionPagination({
   page,
   totalPages,
-  totalCount,
   pageSize,
   onPageChange,
   onPageSizeChange,
 }: Props) {
-  if (totalCount === 0) return null;
-
   return (
     <Box
       display="flex"

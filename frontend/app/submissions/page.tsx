@@ -126,7 +126,7 @@ function SubmissionsPageContent() {
             />
           )}
 
-          {!submissionsQuery.isLoading && totalCount > 0 && (
+          {!submissionsQuery.isLoading && !submissionsQuery.isError && (
             <>
               <Divider />
               <Box px={2} pb={2}>
