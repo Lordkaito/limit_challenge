@@ -11,7 +11,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { memo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { SubmissionListItem } from '@/lib/types';
 import { StatusChip } from '@/components/common/StatusChip';
@@ -31,9 +32,109 @@ interface Props {
   ordering?: string;
   onSort?: (field: string) => void;
   pageSize?: number;
+  backQs?: string;
 }
 
-export function SubmissionTable({
+interface RowProps {
+  sub: SubmissionListItem;
+  onRowClick: (id: number) => void;
+  onRowKeyDown: (e: React.KeyboardEvent, id: number) => void;
+}
+
+const SubmissionRow = memo(function SubmissionRow({ sub, onRowClick, onRowKeyDown }: RowProps) {
+  return (
+    <TableRow
+      hover
+      onClick={() => onRowClick(sub.id)}
+      onKeyDown={(e) => onRowKeyDown(e, sub.id)}
+      tabIndex={0}
+      role="button"
+      aria-label={`View submission for ${sub.company.legalName}`}
+      sx={{ cursor: 'pointer' }}
+    >
+      <TableCell>
+        <Typography variant="body2" fontWeight={500} noWrap>
+          {sub.company.legalName}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" noWrap>
+          {sub.company.industry}
+          {sub.company.headquartersCity ? ` · ${sub.company.headquartersCity}` : ''}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <StatusChip status={sub.status} />
+      </TableCell>
+
+      <TableCell>
+        <PriorityChip priority={sub.priority} />
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2" noWrap>
+          {sub.broker.name}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2" noWrap>
+          {sub.owner.fullName}
+        </Typography>
+      </TableCell>
+
+      <TableCell align="center">
+        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+          <DescriptionIcon
+            fontSize="inherit"
+            color={sub.documentCount > 0 ? 'action' : 'disabled'}
+          />
+          <Typography variant="caption">{sub.documentCount}</Typography>
+        </Box>
+      </TableCell>
+
+      <TableCell align="center">
+        <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+          <ChatBubbleOutlineIcon
+            fontSize="inherit"
+            color={sub.noteCount > 0 ? 'action' : 'disabled'}
+          />
+          <Typography variant="caption">{sub.noteCount}</Typography>
+        </Box>
+      </TableCell>
+
+      <TableCell sx={{ maxWidth: 200 }}>
+        {sub.latestNote ? (
+          <Tooltip title={sub.latestNote.bodyPreview} placement="top">
+            <Box>
+              <Typography variant="caption" color="text.secondary" noWrap display="block">
+                {sub.latestNote.authorName}
+              </Typography>
+              <Typography variant="body2" noWrap>
+                {sub.latestNote.bodyPreview.length > 60
+                  ? `${sub.latestNote.bodyPreview.slice(0, 60)}…`
+                  : sub.latestNote.bodyPreview}
+              </Typography>
+            </Box>
+          </Tooltip>
+        ) : (
+          <Typography variant="caption" color="text.disabled">
+            —
+          </Typography>
+        )}
+      </TableCell>
+
+      <TableCell>
+        <Tooltip title={formatDateTime(sub.createdAt)} placement="top">
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {formatRelativeDate(sub.createdAt)}
+          </Typography>
+        </Tooltip>
+      </TableCell>
+    </TableRow>
+  );
+});
+
+export const SubmissionTable = memo(function SubmissionTable({
   submissions,
   isLoading,
   isError,
@@ -43,21 +144,26 @@ export function SubmissionTable({
   ordering,
   onSort,
   pageSize = 10,
+  backQs,
 }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  function handleRowClick(id: number) {
-    const qs = searchParams.toString();
-    router.push(`/submissions/${id}${qs ? `?${qs}` : ''}`);
-  }
+  const handleRowClick = useCallback(
+    (id: number) => {
+      router.push(`/submissions/${id}${backQs ? `?${backQs}` : ''}`);
+    },
+    [router, backQs],
+  );
 
-  function handleRowKeyDown(e: React.KeyboardEvent, id: number) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleRowClick(id);
-    }
-  }
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent, id: number) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleRowClick(id);
+      }
+    },
+    [handleRowClick],
+  );
 
   return (
     <Box sx={{ overflowX: 'auto' }}>
@@ -129,98 +235,15 @@ export function SubmissionTable({
           {!isLoading &&
             !isError &&
             submissions.map((sub) => (
-              <TableRow
+              <SubmissionRow
                 key={sub.id}
-                hover
-                onClick={() => handleRowClick(sub.id)}
-                onKeyDown={(e) => handleRowKeyDown(e, sub.id)}
-                tabIndex={0}
-                role="button"
-                aria-label={`View submission for ${sub.company.legalName}`}
-                sx={{ cursor: 'pointer' }}
-              >
-                <TableCell>
-                  <Typography variant="body2" fontWeight={500} noWrap>
-                    {sub.company.legalName}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap>
-                    {sub.company.industry}
-                    {sub.company.headquartersCity ? ` · ${sub.company.headquartersCity}` : ''}
-                  </Typography>
-                </TableCell>
-
-                <TableCell>
-                  <StatusChip status={sub.status} />
-                </TableCell>
-
-                <TableCell>
-                  <PriorityChip priority={sub.priority} />
-                </TableCell>
-
-                <TableCell>
-                  <Typography variant="body2" noWrap>
-                    {sub.broker.name}
-                  </Typography>
-                </TableCell>
-
-                <TableCell>
-                  <Typography variant="body2" noWrap>
-                    {sub.owner.fullName}
-                  </Typography>
-                </TableCell>
-
-                <TableCell align="center">
-                  <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                    <DescriptionIcon
-                      fontSize="inherit"
-                      color={sub.documentCount > 0 ? 'action' : 'disabled'}
-                    />
-                    <Typography variant="caption">{sub.documentCount}</Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell align="center">
-                  <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
-                    <ChatBubbleOutlineIcon
-                      fontSize="inherit"
-                      color={sub.noteCount > 0 ? 'action' : 'disabled'}
-                    />
-                    <Typography variant="caption">{sub.noteCount}</Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell sx={{ maxWidth: 200 }}>
-                  {sub.latestNote ? (
-                    <Tooltip title={sub.latestNote.bodyPreview} placement="top">
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" noWrap display="block">
-                          {sub.latestNote.authorName}
-                        </Typography>
-                        <Typography variant="body2" noWrap>
-                          {sub.latestNote.bodyPreview.length > 60
-                            ? `${sub.latestNote.bodyPreview.slice(0, 60)}…`
-                            : sub.latestNote.bodyPreview}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  ) : (
-                    <Typography variant="caption" color="text.disabled">
-                      —
-                    </Typography>
-                  )}
-                </TableCell>
-
-                <TableCell>
-                  <Tooltip title={formatDateTime(sub.createdAt)} placement="top">
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {formatRelativeDate(sub.createdAt)}
-                    </Typography>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
+                sub={sub}
+                onRowClick={handleRowClick}
+                onRowKeyDown={handleRowKeyDown}
+              />
             ))}
         </TableBody>
       </Table>
     </Box>
   );
-}
+});

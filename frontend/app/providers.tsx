@@ -57,11 +57,13 @@ export default function Providers({ children }: PropsWithChildren) {
     setToastMessage(null);
   }, []);
 
+  const toastContextValue = useMemo(() => ({ showError }), [showError]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <ToastContext.Provider value={{ showError }}>
+        <ToastContext.Provider value={toastContextValue}>
           {children}
           <Snackbar
             open={Boolean(toastMessage)}
@@ -74,7 +76,7 @@ export default function Providers({ children }: PropsWithChildren) {
             </MuiAlert>
           </Snackbar>
         </ToastContext.Provider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
       </ThemeProvider>
     </QueryClientProvider>
   );

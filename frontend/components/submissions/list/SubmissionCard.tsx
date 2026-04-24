@@ -7,7 +7,8 @@ import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { memo } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { SubmissionListItem } from '@/lib/types';
 import { StatusChip } from '@/components/common/StatusChip';
@@ -16,15 +17,14 @@ import { formatRelativeDate, formatDateTime } from '@/lib/utils/formatters';
 
 interface Props {
   submission: SubmissionListItem;
+  backQs?: string;
 }
 
-export function SubmissionCard({ submission: sub }: Props) {
+export const SubmissionCard = memo(function SubmissionCard({ submission: sub, backQs }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   function handleClick() {
-    const qs = searchParams.toString();
-    router.push(`/submissions/${sub.id}${qs ? `?${qs}` : ''}`);
+    router.push(`/submissions/${sub.id}${backQs ? `?${backQs}` : ''}`);
   }
 
   return (
@@ -89,4 +89,4 @@ export function SubmissionCard({ submission: sub }: Props) {
       </CardActionArea>
     </Card>
   );
-}
+});

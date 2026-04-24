@@ -7,7 +7,6 @@ import Typography from '@mui/material/Typography';
 interface Props {
   page: number;
   totalPages: number;
-  totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;

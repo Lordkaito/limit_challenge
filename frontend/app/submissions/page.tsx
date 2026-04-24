@@ -5,6 +5,7 @@ import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
+import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -18,6 +19,10 @@ import { SubmissionFilters } from '@/components/submissions/list/SubmissionFilte
 import { SubmissionTable } from '@/components/submissions/list/SubmissionTable';
 import { SubmissionCard } from '@/components/submissions/list/SubmissionCard';
 import { SubmissionPagination } from '@/components/submissions/list/SubmissionPagination';
+import type { Broker, SubmissionListItem } from '@/lib/types';
+
+const EMPTY_SUBMISSIONS: SubmissionListItem[] = [];
+const EMPTY_BROKERS: Broker[] = [];
 
 function SubmissionsPageContent() {
   const theme = useTheme();
@@ -25,6 +30,7 @@ function SubmissionsPageContent() {
 
   const {
     filters,
+    backQs,
     companyDraft,
     setCompanyDraft,
     searchDraft,
@@ -62,11 +68,21 @@ function SubmissionsPageContent() {
     }
   }, [brokerQuery.isError, showError]);
 
-  const submissions = submissionsQuery.data?.results ?? [];
+  const submissions = submissionsQuery.data?.results ?? EMPTY_SUBMISSIONS;
   const totalCount = submissionsQuery.data?.count ?? 0;
   const totalPages = submissionsQuery.data?.totalPages ?? 1;
   const currentPage = filters.page ?? 1;
   const currentPageSize = filters.pageSize ?? 10;
+
+  const onRetry = useCallback(() => submissionsQuery.refetch(), [submissionsQuery]);
+  const onPageChange = useCallback(
+    (p: number) => updateParams({ page: String(p) }),
+    [updateParams],
+  );
+  const onPageSizeChange = useCallback(
+    (s: number) => updateParams({ pageSize: String(s), page: '1' }),
+    [updateParams],
+  );
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -116,7 +132,7 @@ function SubmissionsPageContent() {
             hasNotes={filters.hasNotes}
             dateRangeInvalid={dateRangeInvalid}
             hasActiveFilters={hasActiveFilters}
-            brokers={brokerQuery.data ?? []}
+            brokers={brokerQuery.data ?? EMPTY_BROKERS}
             brokersLoading={brokerQuery.isLoading}
             onUpdate={updateParams}
             onSearchDraftChange={setSearchDraft}
@@ -138,7 +154,9 @@ function SubmissionsPageContent() {
                   </Typography>
                 </Box>
               ) : (
-                submissions.map((sub) => <SubmissionCard key={sub.id} submission={sub} />)
+                submissions.map((sub) => (
+                  <SubmissionCard key={sub.id} submission={sub} backQs={backQs} />
+                ))
               )}
             </Stack>
           ) : (
@@ -148,10 +166,11 @@ function SubmissionsPageContent() {
               isError={submissionsQuery.isError}
               hasActiveFilters={hasActiveFilters}
               onClear={clearAll}
-              onRetry={() => submissionsQuery.refetch()}
+              onRetry={onRetry}
               ordering={filters.ordering}
               onSort={handleSort}
               pageSize={currentPageSize}
+              backQs={backQs}
             />
           )}
 
@@ -162,10 +181,9 @@ function SubmissionsPageContent() {
                 <SubmissionPagination
                   page={currentPage}
                   totalPages={totalPages}
-                  totalCount={totalCount}
                   pageSize={currentPageSize}
-                  onPageChange={(p) => updateParams({ page: String(p) })}
-                  onPageSizeChange={(s) => updateParams({ pageSize: String(s), page: '1' })}
+                  onPageChange={onPageChange}
+                  onPageSizeChange={onPageSizeChange}
                 />
               </Box>
             </>
@@ -176,9 +194,21 @@ function SubmissionsPageContent() {
   );
 }
 
+function SubmissionsPageSkeleton() {
+  return (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Stack spacing={3}>
+        <Skeleton variant="text" width={180} height={40} />
+        <Skeleton variant="rounded" height={72} />
+        <Skeleton variant="rounded" height={400} />
+      </Stack>
+    </Container>
+  );
+}
+
 export default function SubmissionsPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<SubmissionsPageSkeleton />}>
       <SubmissionsPageContent />
     </Suspense>
   );

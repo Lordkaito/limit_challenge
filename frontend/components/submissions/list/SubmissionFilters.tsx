@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -52,7 +53,7 @@ interface Props {
   totalCount?: number;
 }
 
-export function SubmissionFilters({
+export const SubmissionFilters = memo(function SubmissionFilters({
   status,
   priority,
   brokerId,
@@ -240,4 +241,4 @@ export function SubmissionFilters({
       )}
     </Box>
   );
-}
+});

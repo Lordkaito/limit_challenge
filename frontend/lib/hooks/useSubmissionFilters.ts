@@ -87,24 +87,35 @@ export function useSubmissionFilters() {
     router.replace('?', { scroll: false });
   }, [router]);
 
-  const hasActiveFilters = Boolean(
-    filters.status ||
-    filters.priority ||
-    filters.brokerId ||
-    filters.search ||
-    filters.companySearch ||
-    filters.createdFrom ||
-    filters.createdTo ||
-    filters.hasDocuments ||
-    filters.hasNotes,
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        filters.status ||
+          filters.priority ||
+          filters.brokerId ||
+          filters.search ||
+          filters.companySearch ||
+          filters.createdFrom ||
+          filters.createdTo ||
+          filters.hasDocuments ||
+          filters.hasNotes,
+      ),
+    [filters],
   );
 
-  const dateRangeInvalid = Boolean(
-    filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo,
+  const dateRangeInvalid = useMemo(
+    () =>
+      Boolean(
+        filters.createdFrom && filters.createdTo && filters.createdFrom > filters.createdTo,
+      ),
+    [filters],
   );
+
+  const backQs = useMemo(() => searchParams.toString(), [searchParams]);
 
   return {
     filters,
+    backQs,
     companyDraft,
     setCompanyDraft,
     searchDraft,
