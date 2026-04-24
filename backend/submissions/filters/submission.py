@@ -1,6 +1,6 @@
 import django_filters
-from django.core.exceptions import ValidationError
 from django.db.models import Exists, OuterRef, Q
+from rest_framework.exceptions import ValidationError
 
 from submissions import models
 
