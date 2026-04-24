@@ -85,6 +85,7 @@ export interface SubmissionListFilters {
   status?: SubmissionStatus;
   priority?: SubmissionPriority;
   brokerId?: string;
+  search?: string;
   companySearch?: string;
   createdFrom?: string;
   createdTo?: string;

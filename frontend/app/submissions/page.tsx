@@ -27,6 +27,8 @@ function SubmissionsPageContent() {
     filters,
     companyDraft,
     setCompanyDraft,
+    searchDraft,
+    setSearchDraft,
     updateParams,
     clearAll,
     hasActiveFilters,
@@ -65,6 +67,7 @@ function SubmissionsPageContent() {
             status={filters.status}
             priority={filters.priority}
             brokerId={filters.brokerId}
+            searchDraft={searchDraft}
             companyDraft={companyDraft}
             createdFrom={filters.createdFrom}
             createdTo={filters.createdTo}
@@ -75,6 +78,7 @@ function SubmissionsPageContent() {
             brokers={brokerQuery.data ?? []}
             brokersLoading={brokerQuery.isLoading}
             onUpdate={updateParams}
+            onSearchDraftChange={setSearchDraft}
             onCompanyDraftChange={setCompanyDraft}
             onClear={clearAll}
             totalCount={submissionsQuery.isFetching ? undefined : totalCount}

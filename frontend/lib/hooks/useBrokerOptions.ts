@@ -13,6 +13,5 @@ export function useBrokerOptions() {
       return res.data;
     },
     staleTime: 5 * 60_000,
-    enabled: true,
   });
 }

@@ -22,7 +22,6 @@ export function useSubmissionsList(filters: SubmissionListFilters) {
     },
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    enabled: true,
   });
 }
 

@@ -35,6 +35,7 @@ interface Props {
   status?: string;
   priority?: string;
   brokerId?: string;
+  searchDraft: string;
   companyDraft: string;
   createdFrom?: string;
   createdTo?: string;
@@ -45,6 +46,7 @@ interface Props {
   brokers: Broker[];
   brokersLoading: boolean;
   onUpdate: (updates: Record<string, string | undefined>) => void;
+  onSearchDraftChange: (value: string) => void;
   onCompanyDraftChange: (value: string) => void;
   onClear: () => void;
   totalCount?: number;
@@ -54,6 +56,7 @@ export function SubmissionFilters({
   status,
   priority,
   brokerId,
+  searchDraft,
   companyDraft,
   createdFrom,
   createdTo,
@@ -64,6 +67,7 @@ export function SubmissionFilters({
   brokers,
   brokersLoading,
   onUpdate,
+  onSearchDraftChange,
   onCompanyDraftChange,
   onClear,
   totalCount,
@@ -146,6 +150,16 @@ export function SubmissionFilters({
             ))}
           </Select>
         </FormControl>
+
+        <TextField
+          size="small"
+          label="Search"
+          value={searchDraft}
+          onChange={(e) => onSearchDraftChange(e.target.value)}
+          placeholder="Company, broker or summary"
+          inputProps={{ 'aria-label': 'Search submissions' }}
+          sx={{ minWidth: 220 }}
+        />
 
         <TextField
           size="small"
